@@ -144,7 +144,7 @@ public class UnalMapActivity extends MapActivity
     
     void loadMap()
     {
-        logUser("loading map");
+        logUser("Cargando Mapa");
         mapFile = mapsFolder + currentArea + "-gh/" + currentArea + ".map";
         FileOpenResult fileOpenResult = mapView.setMapFile(new File(mapFile));
         if (!fileOpenResult.isSuccess())
@@ -162,7 +162,7 @@ public class UnalMapActivity extends MapActivity
 
     void loadGraphStorage()
     {
-        logUser("loading graph (" + Constants.VERSION + ") ... ");
+        //logUser("loading graph (" + Constants.VERSION + ") ... ");
         new GHAsyncTask<Void, Void, Path>()
         {
             protected Path saveDoInBackground( Void... v ) throws Exception
@@ -186,7 +186,7 @@ public class UnalMapActivity extends MapActivity
                             + getErrorMessage());
                 } else
                 {
-                    logUser("Finished loading graph. Drawing route.");
+                    logUser("Dibujando Ruta");
                     
                 }
 
@@ -257,8 +257,8 @@ public class UnalMapActivity extends MapActivity
                             + toLon + " found path with distance:" + resp.getDistance()
                             / 1000f + ", nodes:" + resp.getPoints().getSize() + ", time:"
                             + time + " " + resp.getDebugInfo());
-                    showToast("the route is " + (int) (resp.getDistance() / 100) / 10f
-                            + "km long, time:" + resp.getTime() / 60f + "min, debug:" + time);
+                    //showToast("the route is " + (int) (resp.getDistance() / 100) / 10f
+                    //        + "km long, time:" + resp.getTime() / 60f + "min, debug:" + time);
 
                     pathOverlay.getOverlayItems().add(createPolyline(resp));
                     mapView.redraw();

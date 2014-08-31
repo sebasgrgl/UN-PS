@@ -75,11 +75,11 @@ public class ImageTextListViewActivity extends Activity implements
     public void onItemClick(AdapterView<?> parent, View view, int position,
             long id) {
     	
-    	 Toast toast = Toast.makeText(getApplicationContext(),
+    	 /*Toast toast = Toast.makeText(getApplicationContext(),
     	            "Item " + (position + 1) + ": " + rowItems.get(position),
     	            Toast.LENGTH_SHORT);
     	        toast.setGravity(Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL, 0, 0);
-    	        toast.show();
+    	        toast.show();*/
     	        
     	String title = ((TextView) view.findViewById(R.id.title)).getText().toString();
 		//String desc = ((TextView) view.findViewById(R.id.desc)).getText().toString();

@@ -1,227 +1,180 @@
 package com.example.un_ps;
 
-
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-
+import java.util.Arrays;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.MenuItem;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Toast;
 
-public class AddSubjects extends Activity {
+public class FinderActivity extends Activity implements TextWatcher{
 	
-	private static ListView lv;
-	private static String[] from = {"SName","SCode","STeacher"};
-    private static int[] to = {R.id.SNameL,R.id.SCodeL,R.id.STeacherL};
-	private static InternalDB dm;
-    private static ArrayList<HashMap<String, Object>> results;
-    private static Dialog addDialog;
-    private static Button addBT;
-    private static Button cancelBT;
-    private static Button colorBT;
-    private static TextView SName;
-    private static TextView SCode;
-	private static TextView STeacher;
-	private static Context context;
-	private static String currentColor;
-	private static String colorVet[];
-	private static String action = "insert";
-	private static String SNameS;
-    private static AlertDialog.Builder builder;
-    private static AlertDialog alert;
-
-    @Override
-	public void onCreate(Bundle savedInstanceState) {
-	    super.onCreate(savedInstanceState);
-	    setContentView(R.layout.timetable_addsubjects);
-	    
-	    lv = (ListView) findViewById(R.id.Slist);
-	    dm = new InternalDB(this);
-	    update();
-	    addDialog = new Dialog(this);
-	    addDialog.setCancelable(false);
-	    addDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-	    addDialog.setContentView(R.layout.timetable_adddialog);
-	    SName = (TextView)addDialog.findViewById(R.id.SName);
-	    SCode = (TextView)addDialog.findViewById(R.id.SCode);
-	    STeacher = (TextView)addDialog.findViewById(R.id.STeacher);
-	    colorBT = (Button) addDialog.findViewById(R.id.colorBT);
-	    context = this;
-	    currentColor = "#0000ff";
-	    colorBT.setOnClickListener(new OnClickListener() {
-	    	
-			public void onClick(View v) {
-				
-				ColorPickerDialog cpd = new ColorPickerDialog(context,
-						new ColorPickerDialog.OnColorChangedListener() {
-					
-					public void colorChanged(int color) {
-						currentColor = Integer.toHexString(color);
-						currentColor = currentColor.substring(2, 8);
-						currentColor = "#"+currentColor;
-						colorBT.setBackgroundColor(color);
-					}
-				}, Color.parseColor(currentColor));
-				cpd.show();
-			}
-	    	
-	    });
-	    cancelBT = (Button) addDialog.findViewById(R.id.cancelBT);
-	    cancelBT.setOnClickListener(new OnClickListener() {
-	    	
-			public void onClick(View v) {
-				addDialog.cancel();
-				SName.setText(null);
-				SCode.setText(null);
-				STeacher.setText(null);
-			}
-	    	
-	    });
-	    addBT = (Button) addDialog.findViewById(R.id.addBT);
-	    addBT.setOnClickListener(new OnClickListener() {
-	    			
-			public void onClick(View v) {
-				if(action == "insert") {
-					dm.open();
-					dm.insertIntoSubjects(SName.getText().toString(),SCode.getText().toString(), STeacher.getText().toString(), currentColor);
-					dm.close();
-				}else if(action == "update"){
-					dm.open();
-	        		dm.updateSubjects(SName.getText().toString(),SCode.getText().toString(), STeacher.getText().toString(), currentColor);
-	        		dm.close();
-				}
-				update();
-				addDialog.cancel();
-				SName.setText(null);
-				SCode.setText(null);
-				STeacher.setText(null);
-			}
-	    	
-	    });
-	    
-	    registerForContextMenu(lv);
-	    
-    	builder = new AlertDialog.Builder(this);
-        builder.setMessage("Are you sure you want to delete this subject? (All lessons contains this " +
-        		"subject will be deleted)")
-               .setCancelable(false)
-               .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                	   dm.open();
-                	   dm.deleteSubjects(SNameS);
-                	   dm.close();
-                       update();
-                   }
-               })
-               .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                   public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                   }
-               });
-        alert = builder.create();
-	}
-    
-    @Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-    	super.onCreateContextMenu(menu, v, menuInfo);
-    	menu.add(0, 1, 0, "Edit");
-    	menu.add(0, 2, 0, "Delete");
-    	menu.setHeaderTitle("Options");	
-    }
-    
-    @Override
-	public boolean onContextItemSelected(MenuItem item) {
-    	
-    	AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-    	SNameS = results.get(info.position).get("SName").toString();
-    	String SCodeS = results.get(info.position).get("SCode").toString();
-    	String STeacherS = results.get(info.position).get("STeacher").toString();
-    	currentColor = results.get(info.position).get("SColor").toString();
-    	
-    	switch (item.getItemId()) {
-        	case 1:
-        		addDialog.show();
-				SName.setText(SNameS);
-				SCode.setText(SCodeS);
-				STeacher.setText(STeacherS);
-				colorBT.setBackgroundColor(Color.parseColor(currentColor));
-				action = "update";
-				SName.setEnabled(false);//set to true
-        		SName.setText(SNameS);
-        		SCode.setText(SCodeS);
-				STeacher.setText(STeacherS);
-        		break;
-        	case 2:
-        		alert.show();
-        		break;
-    	}
-    	update();
-    	return true;
-    }
+	AutoCompleteTextView mOrigin;
+	AutoCompleteTextView mDestiny;
 	
-	public void addSubject(View v) {
-		SName.setEnabled(true);
-		addDialog.show();
-		action = "insert";
-		SName.requestFocus();
-	}
-	
-	public class myAdapter extends SimpleAdapter{
-        
-		String[] colors;
-        public myAdapter(Context context, List<? extends Map<String, ?>> data,
-        	int resource, String[] from, int[] to, String[] col) {
-            	super(context, data, resource, from, to);
-                colors = col;
-        	}
-            @Override
-			public View getView(int position, View convertView, ViewGroup parent ) {
-            	View view = super.getView(position, convertView, parent);
-            	View label = view.findViewById(R.id.colorLabel);
-                label.setBackgroundColor(Color.parseColor(colors[position]));
-                return view;
-            }
-    }
-	
-	private void update() {
-		dm.open();
-		results = dm.selectSubjects();
-		dm.close();
-		colorVet = new String[results.size()];
-	    for(int i=0;i<results.size();i++) {
-	    	HashMap<String, Object> color = 
-	    		new HashMap<String, Object>();
-	    	color = results.get(i);
-	    	colorVet[i] = (String) color.get("SColor");
-	    }
-	    myAdapter mA = new myAdapter(this, results, R.layout.timetable_paperlist, from, to, colorVet);
-		lv.setAdapter(mA);
-	}
+	public String BuildingsBase[];
+	private String LatitudBase[];
+	private String LongitudBase[];
+	private double LatPos = 4.635200;
+	private double LonPos = -74.082280;
+	private double LatPos2 = 4.635200;
+	private double LonPos2 = -74.082280;
+		
 	
 	@Override
-	public void onBackPressed () {
-		finish();
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_finder);
+		BuildingsBase = getIntent().getExtras().getStringArray("BuildingsBase");
+		LatitudBase = getIntent().getExtras().getStringArray("LatitudBase");
+		LongitudBase = getIntent().getExtras().getStringArray("LongitudBase");
+
+		//
+		//Text View to Origin
+		//
+		////////////////////////////////////////////////////////////////////////////////////////
+		final AutoCompleteTextView mOrigin = 
+				(AutoCompleteTextView)findViewById(
+		           R.id.origin_finder);
+		mOrigin.addTextChangedListener(this);
+		mOrigin.setAdapter(
+				new ArrayAdapter<String>(this,
+						android.R.layout.simple_dropdown_item_1line, BuildingsBase));
+		mOrigin.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				mOrigin.showDropDown();
+				return false;
+			}
+		});
+		mOrigin.setValidator(new AutoCompleteTextView.Validator() {
+			
+			@Override
+			public boolean isValid(CharSequence text) {
+				// TODO Auto-generated method stub
+				Arrays.sort(BuildingsBase);
+				if (Arrays.binarySearch(BuildingsBase, text.toString()) > 0) {
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
+			public CharSequence fixText(CharSequence invalidText) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+		////////////////////////////////////////////////////////////////////////////////////////
+		
+		//
+		//Text View to Destiny
+		//
+		////////////////////////////////////////////////////////////////////////////////////////
+		final AutoCompleteTextView mDestiny = 
+				(AutoCompleteTextView)findViewById(
+		           R.id.destiny_finder);
+		mDestiny.addTextChangedListener(this);
+		mDestiny.setAdapter(
+				new ArrayAdapter<String>(this,
+						android.R.layout.simple_dropdown_item_1line, BuildingsBase));		
+		mDestiny.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				mDestiny.showDropDown();
+				return false;
+			}
+		});
+		mDestiny.setValidator(new AutoCompleteTextView.Validator() {
+			
+			@Override
+			public boolean isValid(CharSequence text) {
+				// TODO Auto-generated method stub
+				Arrays.sort(BuildingsBase);
+				if (Arrays.binarySearch(BuildingsBase, text.toString()) > 0) {
+					return true;
+				}
+				return false;
+			}
+			
+			@Override
+			public CharSequence fixText(CharSequence invalidText) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+		////////////////////////////////////////////////////////////////////////////////////////
+		
+	}
+
+	@Override
+	public void afterTextChanged(Editable arg0) {
+	 // TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void beforeTextChanged(CharSequence s, int start, int count,
+	  int after) {
+	 // TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onTextChanged(CharSequence s, int start, int before, int count) {
+	 // TODO Auto-generated method stub
+
+	}
+		
+	public void goMap (View view) {
+		int counter = 0;
+		AutoCompleteTextView mOrigin = 
+				(AutoCompleteTextView)findViewById(
+		           R.id.origin_finder);
+		String p = mOrigin.getText().toString();
+		for(int i=0; i < BuildingsBase.length; i++) {
+			String u = BuildingsBase[i].toString();
+	        if( (u.equals( p )) && !(u.equals("  -  "))) {
+	        	Log.e("Edificio Origen", u);
+	        	LatPos = Double.parseDouble(LatitudBase[i].toString());
+	        	LonPos = Double.parseDouble(LongitudBase[i].toString());
+	        	Log.e("Ubicación Edificio", String.valueOf(LatPos) + "  " + String.valueOf(LonPos));
+	        	counter++;
+	        }
+		}
+		
+		AutoCompleteTextView mDestiny = 
+				(AutoCompleteTextView)findViewById(
+		           R.id.destiny_finder);
+		String p2 = mDestiny.getText().toString();
+		for(int i=0; i < BuildingsBase.length; i++) {
+			String u = BuildingsBase[i].toString();
+	        if( ((u.equals( p2 )) && !(u.equals("  -  "))) && !(p.equals( p2 )) ) {
+	        	Log.e("Edificio Destino", u);
+	        	LatPos2 = Double.parseDouble(LatitudBase[i].toString());
+	        	LonPos2 = Double.parseDouble(LongitudBase[i].toString());
+	        	Log.e("Ubicación Edificio", String.valueOf(LatPos2) + "  " + String.valueOf(LonPos2));
+	        	counter++;
+	        }
+		}
+		if (counter == 2) {
+			Intent openMap = new Intent(this, UnalMapActivity.class);
+			openMap.putExtra("LatPos", LatPos);
+			openMap.putExtra("LonPos", LonPos);
+			openMap.putExtra("LatPos2", LatPos2);
+			openMap.putExtra("LonPos2", LonPos2);
+			startActivity(openMap);
+		}
+		else {
+			Toast.makeText(this, R.string.invalid_path, Toast.LENGTH_LONG).show();
+		}
 	}
 
 }
